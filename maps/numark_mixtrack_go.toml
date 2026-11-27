@@ -1,0 +1,509 @@
+# Numark Mixtrack Go: built-in profile, picked when a port whose name contains "Mixtrack Go"
+# connects (or, later, by its Device Inquiry reply). MIDI LEARN overrides single controls and
+# keeps the rest; MIDI panel -> PROFILE resets to these defaults.
+#
+# Source of the numbers (facts only; no code copied): the community Mixxx mapping in the
+# unmerged Mixxx pull request #16813 (res/controllers/Numark-Mixtrack-Go.midi.xml and
+# .scripts.js, commit 4f6c9ea). No Numark MIDI chart was found.
+# Status: COMMUNITY, CROSS-CHECKED, and OWNER-VERIFIED where the owner's MIDI › MONITOR checks
+# 1-8 (2026-11-26, _docs/controllers/mixtrack-go-and-mpk-mini-3.md) covered it: TEMPO, BROWSE,
+# MODE / SHIFT, the jog, the PFL light, the pads, start-up and quit (marked "owner" below).
+#
+# Channels (0-based, as stored here): left deck 0, right deck 1, global 15, pads 4 / 5.
+# Buttons send note on 127 / note off. LEDs light on the same note: 0 off, 1 dim, 127 bright.
+#
+# Start-up (owner, 2026-11-25: the controller stayed in its demo light show with the old
+# start-up): the app sends the Device Inquiry to all devices first (F0 7E 7F 06 01 F7, every
+# controller), then this profile's init at once: the Device Inquiry addressed to device 00
+# (F0 7E 00 06 01 F7), which Mixxx's shipped scripts for the sibling Mixtrack Platinum FX and Pro FX
+# send first as "disable demo lightshow", then the Serato status request (the controller answers
+# with every knob and fader position, so soft takeover starts from where the hardware is). LEDs
+# wait 2 s (the end of the light show would wipe them; the Go's community mapping waits 2 s too).
+# UNVERIFIED on a Mixtrack Go until the owner's check. No reply means carry on.
+#
+# SHIFT is MODE held: the controller then sends other notes for the shifted controls (its own
+# firmware; both sources agree on them). Mapped (AL5-11; the Numark guide's printing where it
+# has one):
+#   SHIFT + CUE  note 0x05, ch 0 / 1 -> back to the start (the guide's "Track Beginning"; a
+#                                       paused deck only)
+#   SHIFT + pad  notes 0x1C-0x1F, ch 4 / 5 -> clear that pad's hot cue (the guide's "Delete
+#                                       Hot Cue")
+#   SHIFT + LOAD 2  note 0x49, ch 15 -> VINYL on / off on both decks (the guide's "vinyl mode")
+#   MODE  note 0x00, ch 4 / 5 -> a press and release alone moves the deck's pads to the next mode:
+#                                CUES, LOOP, ROLL, SAMPLER (pads 1-4 play L1-L4), round again
+#                                (`ui_hints.pad_modes`, D-224, AL5-18; version 4: it no longer
+#                                pages hot cues 5-8). Held with another control it is SHIFT
+#   SHIFT + pad in SAMPLER  -> stops that layer slot at once (AL5-18)
+#   SHIFT + PLAY 0x04, ch 0 / 1 -> AUTO-GLIDE (a smooth transition to the other deck; djay's
+#                                  "transition"), D-210
+#   SHIFT + PFL 0x54, ch 0 / 1 -> the deck's pitch to 0 % (djay: tempo reset), D-210
+#   SHIFT + jog CC 0x2B, ch 0 / 1 -> SEARCH: the playhead moves 0.05 s a tick (djay: jog seek),
+#                                  D-210
+# Not mapped (each waits for the Sublayer feature named):
+#   ACAPELLA 0x46 / INSTRUMENTAL 0x48 (and shifted 0x47 / 0x49), ch 0 / 1 -> stems (AL5-07/08)
+#   FADE FX 0x46 (shifted 0x47), ch 15 -> crossfader FX (AL4-33 1c)
+#   SHIFT + LOAD 1  0x48, ch 15 -> FILTER / LOW knob as a filter (no deck filter yet; the knob
+#                                  is the low EQ)
+#   SHIFT + SYNC 0x03, ch 0 / 1 -> djay: tempo-only sync (Sublayer's SYNC always matches the
+#                                  phase too; no tempo-only command)
+#   SHIFT + BROWSE CC 0x01, ch 15 (owner: 1 clockwise, 127 counter-clockwise, after MODE held
+#                    sends note 0x20 ch 0) -> crate navigation (no library browser on DECKS);
+#                    MODE + BROWSE push sends the plain note 0x07 (BROWSE push)
+#   MODE held  note 0x20, ch 0 (owner: 90 20 7F, then 80 20 00 on release; deck B's ch 1 by
+#              symmetry, unverified) -> SHIFT (deck.x.shift, D-249): the shifted labels show on
+#              screen (D-236) and held buttons let go (D-218). The Go sends its shifted notes
+#              meanwhile. A MODE tap alone sends note 0x00 on ch 4 on and off at the same instant,
+#              on release (owner: 94 00 7F + 84 00 00): that moves the pads to the next mode
+#   The Go's own pad modes (loops, effects, samples, stems; owner scope D-208): Sublayer's CUES /
+#   LOOP / ROLL / SAMPLER modes, cycled by MODE (above; D-224) or picked on screen.
+# Jog (AL4-41): turning sends CC 0x06 relative (1 = forward, 127 = back, about 242 ticks a turn);
+# the rim sends the same CC 0x06 as the top (owner), so both nudge or scratch per VINYL; the top's
+# touch note 0x50 (owner).
+# Cross-check (AL5-10, 2026-11-25): every number below agrees between the Mixxx mapping (A) and
+# an independent djay mapping (djay 5.6.7 "NumarkMixtrackGo", Algoriddim community thread
+# 42793; USB 15E4:005B), so they are verified by two sources, not yet by our own hands-on check.
+# The PFL light is lit with the note-off status (0x80 / 0x81 note 0x1B; the Mixxx mapping and
+# the PCDJ DEX 4 mapping derived from it both do): the [[led]] entries below; the light follows
+# on both decks (owner). Pads always send velocity 127 (owner), and MODE paging keeps the pads on
+# notes 0x14-0x17 of ch 4 (owner). Start-up stops the demo light show and the Go answers the
+# Device Inquiry (owner); quitting turns its lights off (owner).
+# Shutdown: the Serato "controller off" SysEx Mixxx's shipped scripts for the sibling Mixtrack
+# Platinum FX and Pro FX send on exit (sibling evidence only; unverified on a Go): it is sent
+# after the lights go dark when Sublayer lets go of the controller. The Go's own djay mapping
+# sends only the broadcast inquiry and no shutdown; ours is kept (owner, build 634: the demo
+# light show stops with this start-up).
+# D-199 (owner, build 634; research _docs/controllers/mixtrack-go-and-mpk-mini-3.md): the Go
+# sends 0 at the top of TEMPO's travel (−) and 16383 at the bottom (+), which is the pitch
+# parameter's own direction, so TEMPO is not inverted (the inversion copied from Mixxx, whose
+# rate slider runs the other way, flipped it twice with D-157's screen); the owner's check
+# confirms top 0 / bottom 127 on both decks, CC 9 before CC 41. BROWSE: the owner's check shows
+# clockwise sends 1 (BF 00 01) and counter-clockwise 127, so it is NOT inverted (D-247 corrects
+# D-199's inversion). MASTER (CC 10, ch 15) is not mapped: the knob is the Go's own sound card
+# output level, and bound to Sublayer's master it muted the Mac's speakers (D-242).
+# The bindings an earlier version put in are listed as [[superseded]] at the end: a project
+# still holding them (untouched) gets these instead.
+# Version 5 (D-279): SHIFT + headphone cue's label is "0 %" (pitch to 0 %): "PITCH 0" was cut to
+# "PITC…" on the 38 pt button at 1280.
+format = 1
+status = "community"
+version = 5
+name = "Numark Mixtrack Go"
+ports = ["Mixtrack Go"]
+init = ["F0 7E 00 06 01 F7", "F0 00 20 7F 03 01 F7"]
+init_delay_ms = 2000
+shutdown = ["F0 00 20 7F 02 F7"]
+
+[leds]
+on = 127
+off = 1
+
+[jog]
+ticks_per_rev = 242
+
+# How the Go is laid out (AL5-14, D-233): 4 pads a deck; MODE cycles the pad modes in this order
+# (D-224, AL5-18), a single EQ knob (bass) a deck, and what SHIFT does
+# to the pads (clear the hot cue; in SAMPLER, stop the slot), CUE (back to the start, AL5-11), PFL (pitch to 0 %) and
+# PLAY (AUTO-GLIDE, D-210); the SHIFT overlay draws these while MODE is held (AL5-15). How its
+# decks are laid out (mirrored or not) isn't in its documents: left unsaid.
+[ui_hints]
+pad_count = 4
+pad_modes = ["hot_cue", "loop", "roll", "sampler"]
+has_3band_eq = false
+
+[ui_hints.shift_labels]
+"deck.a.cue" = "START"
+"deck.b.cue" = "START"
+"deck.a.pfl" = "0 %"
+"deck.b.pfl" = "0 %"
+"deck.a.play" = "GLIDE"
+"deck.b.play" = "GLIDE"
+"deck.a.pad.1" = "CLEAR"
+"deck.a.pad.2" = "CLEAR"
+"deck.a.pad.3" = "CLEAR"
+"deck.a.pad.4" = "CLEAR"
+"deck.b.pad.1" = "CLEAR"
+"deck.b.pad.2" = "CLEAR"
+"deck.b.pad.3" = "CLEAR"
+"deck.b.pad.4" = "CLEAR"
+
+[[led]]
+param = "deck.a.pfl"
+channel = 0
+message = { type = "note_off_status", number = 27 }
+
+[[led]]
+param = "deck.b.pfl"
+channel = 1
+message = { type = "note_off_status", number = 27 }
+
+# ---- Deck A (channel 0) ----
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.play"
+message = { type = "note", number = 0 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.cue"
+message = { type = "note", number = 1 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.sync"
+message = { type = "note", number = 2 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.fader"
+message = { type = "cc", number = 22 }
+
+# FILTER / LOW: the deck's low EQ (Sublayer's filter is one master-bus effect, not per deck).
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.eq.low"
+message = { type = "cc", number = 26 }
+
+# TEMPO: 14-bit; 0 at the top (−), 16383 at the bottom (+): the parameter's direction, so not
+# inverted (D-199). The screen's fader has − at the top too (D-157).
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.pitch"
+message = { type = "cc14", msb = 9, lsb = 41 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.pfl"
+message = { type = "note", number = 27 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.jog"
+message = { type = "relative_cc", number = 6, encoding = "TwosComplement" }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.jog.touch"
+message = { type = "note", number = 80 }
+
+# ---- Deck B (channel 1) ----
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.play"
+message = { type = "note", number = 0 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.cue"
+message = { type = "note", number = 1 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.sync"
+message = { type = "note", number = 2 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.fader"
+message = { type = "cc", number = 22 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.eq.low"
+message = { type = "cc", number = 26 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.pitch"
+message = { type = "cc14", msb = 9, lsb = 41 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.pfl"
+message = { type = "note", number = 27 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.jog"
+message = { type = "relative_cc", number = 6, encoding = "TwosComplement" }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.jog.touch"
+message = { type = "note", number = 80 }
+
+# ---- Global (channel 15) ----
+
+[[binding]]
+port_name = "*"
+channel = 15
+param = "mixer.xfader"
+message = { type = "cc", number = 8 }
+
+[[binding]]
+port_name = "*"
+channel = 15
+param = "deck.a.load"
+message = { type = "note", number = 2 }
+
+[[binding]]
+port_name = "*"
+channel = 15
+param = "deck.b.load"
+message = { type = "note", number = 3 }
+
+# BROWSE: 1 / 127 per detent (two's complement); clockwise sends 1 (owner, D-247), so clockwise
+# is the next candidate without inverting.
+[[binding]]
+port_name = "*"
+channel = 15
+param = "browse.turn"
+message = { type = "relative_cc", number = 0, encoding = "TwosComplement" }
+
+[[binding]]
+port_name = "*"
+channel = 15
+param = "browse.push"
+message = { type = "note", number = 7 }
+
+# CUE LEVEL: the headphone volume (D-154).
+[[binding]]
+port_name = "*"
+channel = 15
+param = "cue.vol"
+message = { type = "cc", number = 12 }
+
+# ---- Pads (channel 4 left deck, 5 right deck): PADs 1-4 (AL5-02, paged AL5-11) ----
+# Notes 0x14-0x17 (20-23). A pad sets its hot cue when empty and jumps to it otherwise (hot
+# cues 1-4, or 5-8 after MODE); its LED is lit while the slot holds a cue.
+
+[[binding]]
+port_name = "*"
+channel = 4
+param = "deck.a.pad.1"
+message = { type = "note", number = 20 }
+
+[[binding]]
+port_name = "*"
+channel = 4
+param = "deck.a.pad.2"
+message = { type = "note", number = 21 }
+
+[[binding]]
+port_name = "*"
+channel = 4
+param = "deck.a.pad.3"
+message = { type = "note", number = 22 }
+
+[[binding]]
+port_name = "*"
+channel = 4
+param = "deck.a.pad.4"
+message = { type = "note", number = 23 }
+
+[[binding]]
+port_name = "*"
+channel = 5
+param = "deck.b.pad.1"
+message = { type = "note", number = 20 }
+
+[[binding]]
+port_name = "*"
+channel = 5
+param = "deck.b.pad.2"
+message = { type = "note", number = 21 }
+
+[[binding]]
+port_name = "*"
+channel = 5
+param = "deck.b.pad.3"
+message = { type = "note", number = 22 }
+
+[[binding]]
+port_name = "*"
+channel = 5
+param = "deck.b.pad.4"
+message = { type = "note", number = 23 }
+
+# ---- Shifted controls and MODE (AL5-11) ----
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.start"
+message = { type = "note", number = 5 }
+
+[[binding]]
+port_name = "*"
+channel = 4
+param = "deck.a.hotcue.1.clear"
+message = { type = "note", number = 28 }
+
+[[binding]]
+port_name = "*"
+channel = 4
+param = "deck.a.hotcue.2.clear"
+message = { type = "note", number = 29 }
+
+[[binding]]
+port_name = "*"
+channel = 4
+param = "deck.a.hotcue.3.clear"
+message = { type = "note", number = 30 }
+
+[[binding]]
+port_name = "*"
+channel = 4
+param = "deck.a.hotcue.4.clear"
+message = { type = "note", number = 31 }
+
+[[binding]]
+port_name = "*"
+channel = 4
+param = "deck.a.pad.page"
+message = { type = "note", number = 0 }
+
+# MODE held: the Go's SHIFT (owner's check: note 0x20 on the deck's channel; D-249).
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.shift"
+message = { type = "note", number = 32 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.shift"
+message = { type = "note", number = 32 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.start"
+message = { type = "note", number = 5 }
+
+[[binding]]
+port_name = "*"
+channel = 5
+param = "deck.b.hotcue.1.clear"
+message = { type = "note", number = 28 }
+
+[[binding]]
+port_name = "*"
+channel = 5
+param = "deck.b.hotcue.2.clear"
+message = { type = "note", number = 29 }
+
+[[binding]]
+port_name = "*"
+channel = 5
+param = "deck.b.hotcue.3.clear"
+message = { type = "note", number = 30 }
+
+[[binding]]
+port_name = "*"
+channel = 5
+param = "deck.b.hotcue.4.clear"
+message = { type = "note", number = 31 }
+
+[[binding]]
+port_name = "*"
+channel = 5
+param = "deck.b.pad.page"
+message = { type = "note", number = 0 }
+
+[[binding]]
+port_name = "*"
+channel = 15
+param = "vinyl.both"
+message = { type = "note", number = 73 }
+
+# ---- More shifted controls (D-208, D-210) ----
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "glide.blend"
+message = { type = "note", number = 4 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.pitch.reset"
+message = { type = "note", number = 84 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.seek"
+message = { type = "relative_cc", number = 43, encoding = "TwosComplement" }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "glide.blend"
+message = { type = "note", number = 4 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.pitch.reset"
+message = { type = "note", number = 84 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.seek"
+message = { type = "relative_cc", number = 43, encoding = "TwosComplement" }
+
+# ---- Superseded (D-199): what builds up to 634 put in; replaced in a project that still has
+# them exactly ----
+
+[[superseded]]
+port_name = "*"
+channel = 0
+param = "deck.a.pitch"
+message = { type = "cc14", msb = 9, lsb = 41 }
+invert = true
+
+[[superseded]]
+port_name = "*"
+channel = 1
+param = "deck.b.pitch"
+message = { type = "cc14", msb = 9, lsb = 41 }
+invert = true
+
+# Version 2 (D-199) inverted BROWSE; the owner's check shows it was right before (D-247).
+[[superseded]]
+port_name = "*"
+channel = 15
+param = "browse.turn"
+message = { type = "relative_cc", number = 0, encoding = "TwosComplement" }
+invert = true
+
+# Versions up to 2 bound the Go's MASTER knob to Sublayer's master (D-242): retired, so an
+# untouched one leaves the project (nothing replaces it).
+[[retired]]
+port_name = "*"
+channel = 15
+param = "mixer.master"
+message = { type = "cc", number = 10 }

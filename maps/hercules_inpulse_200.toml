@@ -1,0 +1,357 @@
+# Hercules DJControl Inpulse 200: built-in map (AL5-12 step 3b), picked by its Device Inquiry
+# reply (documented: maker 00 01 4E Guillemot, range 02 00, model 19 00). Not by port name: the
+# port name isn't documented and the Inpulse 200 MK2 (no MIDI document found) would match it.
+#
+# Status: COMMUNITY (written from the manufacturer's documents, not yet tested on the device).
+# Clean-room: every number is from Hercules' own documents (research in
+# _docs/controllers/hercules.md); nothing from any other mapping.
+#   H2-MC "List of MIDI commands - MIDI COMMANDS OF HERCULES DJCONTROL INPULSE 200" V1.0 (2021)
+#   H2-UM DJControl Inpulse 200 User manual (EN, 2018)
+#
+# Channels (0-based, as stored here): global 0, deck A 1, deck B 2, deck A pads 6, deck B pads 7
+#   (status 90 / 91 / 92 / 96 / 97). Buttons send 7F pressed, 00 released; LEDs take 7F on,
+#   00 off on the same note. Knobs and faders are 14-bit (LSB = MSB + 0x20), "00 > 7F: Full
+#   Left > Full Right". Encoders and jogs: "01 > 3F: CW", "7F > 40: CCW" (two's complement).
+# Mapped (H2-MC page in brackets): PLAY 07, CUE 06, SYNC 05, PFL 0C, LOAD 0D, VINYL 03 (Sublayer's
+#   VINYL), SHIFT 04 (lets go of the deck's held buttons, D-218) [p5-6, p10-11], VOL CC 00/20,
+#   LOW 02/22, HIGH 04/24 (two-band EQ: no MID), GAIN 05/25, PITCH 08/28, JOG 09 and JOG_SCRATCH
+#   0A (relative) [p16-19], JOG_TOUCH note 08 [p5-6]; pads, MODE1 (HOTCUE): notes 00-03 -> hot
+#   cues 1-4, SHIFT + pad (note + 8) -> clear [p6-9, p11-13]; global: XFADER CC 00/20, BROWSE_ENC
+#   CC 01, BROWSE_PUSH note 00, VOL_MASTER 03/23, VOL_HDP 04/24 [p4, p14-15].
+# Not mapped: FILTER (no deck filter in Sublayer), LOOP IN / OUT, MODE buttons and the ROLL / FX
+#   / SAMPLER pad modes, BEATMATCH_GUIDE, ASSISTANT, the energy ring and guide LEDs, the other
+#   SHIFT notes (printed on status 94 for both decks: a document error to check), "B0 7F 7F"
+#   (the status request: no start-up message is sent).
+# Lights: PLAY, CUE, SYNC, PFL, VINYL and the pads, on the same notes (7F on, 00 off).
+# TEMPO: which physical end sends 00 isn't stated; not inverted (00 = the parameter's "−"),
+#   an assumption to confirm (checklist item 2). Jog ticks per turn: not documented.
+format = 1
+status = "community"
+version = 1
+name = "Hercules DJControl Inpulse 200"
+sources = [
+    "https://ts.hercules.com/download/sound/manuals/DJC_Inpulse200/DJControlInpulse200_MIDI_Commands_V_1_0.pdf",
+    "https://ts.hercules.com/download/sound/manuals/DJC_Inpulse200/DJControl_Inpulse_200_User_Manual_EN.pdf",
+]
+ports = []
+
+[inquiry]
+manufacturer = "00 01 4E"
+family = "02 00"
+model = "19 00"
+
+[leds]
+on = 127
+off = 0
+
+# ---- Deck A (channel 1; pads 6) ----
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.play"
+message = { type = "note", number = 7 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.cue"
+message = { type = "note", number = 6 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.sync"
+message = { type = "note", number = 5 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.pfl"
+message = { type = "note", number = 12 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.load"
+message = { type = "note", number = 13 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.vinyl"
+message = { type = "note", number = 3 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.shift"
+message = { type = "note", number = 4 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.fader"
+message = { type = "cc14", msb = 0, lsb = 32 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.eq.low"
+message = { type = "cc14", msb = 2, lsb = 34 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.eq.high"
+message = { type = "cc14", msb = 4, lsb = 36 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.trim"
+message = { type = "cc14", msb = 5, lsb = 37 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.pitch"
+message = { type = "cc14", msb = 8, lsb = 40 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.jog.touch"
+message = { type = "note", number = 8 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.jog"
+message = { type = "relative_cc", number = 9, encoding = "TwosComplement" }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.a.jog"
+message = { type = "relative_cc", number = 10, encoding = "TwosComplement" }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "deck.a.hotcue.1"
+message = { type = "note", number = 0 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "deck.a.hotcue.2"
+message = { type = "note", number = 1 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "deck.a.hotcue.3"
+message = { type = "note", number = 2 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "deck.a.hotcue.4"
+message = { type = "note", number = 3 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "deck.a.hotcue.1.clear"
+message = { type = "note", number = 8 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "deck.a.hotcue.2.clear"
+message = { type = "note", number = 9 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "deck.a.hotcue.3.clear"
+message = { type = "note", number = 10 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "deck.a.hotcue.4.clear"
+message = { type = "note", number = 11 }
+
+# ---- Deck B (channel 2; pads 7) ----
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.play"
+message = { type = "note", number = 7 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.cue"
+message = { type = "note", number = 6 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.sync"
+message = { type = "note", number = 5 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.pfl"
+message = { type = "note", number = 12 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.load"
+message = { type = "note", number = 13 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.vinyl"
+message = { type = "note", number = 3 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.shift"
+message = { type = "note", number = 4 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.fader"
+message = { type = "cc14", msb = 0, lsb = 32 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.eq.low"
+message = { type = "cc14", msb = 2, lsb = 34 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.eq.high"
+message = { type = "cc14", msb = 4, lsb = 36 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.trim"
+message = { type = "cc14", msb = 5, lsb = 37 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.pitch"
+message = { type = "cc14", msb = 8, lsb = 40 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.jog.touch"
+message = { type = "note", number = 8 }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.jog"
+message = { type = "relative_cc", number = 9, encoding = "TwosComplement" }
+
+[[binding]]
+port_name = "*"
+channel = 2
+param = "deck.b.jog"
+message = { type = "relative_cc", number = 10, encoding = "TwosComplement" }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.b.hotcue.1"
+message = { type = "note", number = 0 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.b.hotcue.2"
+message = { type = "note", number = 1 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.b.hotcue.3"
+message = { type = "note", number = 2 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.b.hotcue.4"
+message = { type = "note", number = 3 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.b.hotcue.1.clear"
+message = { type = "note", number = 8 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.b.hotcue.2.clear"
+message = { type = "note", number = 9 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.b.hotcue.3.clear"
+message = { type = "note", number = 10 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.b.hotcue.4.clear"
+message = { type = "note", number = 11 }
+
+# ---- Mixer and browser (channel 0) ----
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "mixer.xfader"
+message = { type = "cc14", msb = 0, lsb = 32 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "browse.turn"
+message = { type = "relative_cc", number = 1, encoding = "TwosComplement" }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "browse.push"
+message = { type = "note", number = 0 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "mixer.master"
+message = { type = "cc14", msb = 3, lsb = 35 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "cue.vol"
+message = { type = "cc14", msb = 4, lsb = 36 }

@@ -1,0 +1,106 @@
+# Akai MPK mini mk3 ("MPK mini 3"): built-in profile, picked when a port whose name contains
+# "MPK mini 3" connects (macOS / Windows "MPK mini 3"; Linux "MPK mini 3 MIDI 1"). MIDI LEARN
+# overrides single controls and keeps the rest; MIDI panel -> PROFILE resets to these defaults.
+#
+# Status: COMMUNITY, untested on hardware. Numbers are the factory program 1 ("PGM:MPC") from
+# _docs/controllers/mixtrack-go-and-mpk-mini-3.md (a community program dump, cross-checked with
+# vendor integration docs); no Akai MIDI chart exists. Facts only, no code copied.
+#
+# Channels (0-based, as stored here): keys, knobs and joystick 0; pads 9.
+#   Keys: notes on channel 0. Pads: notes 36-43 (bank A) / 44-51 (bank B) on channel 9.
+#   Joystick: X = pitch bend, Y = CC 1 (mod wheel). Sustain input: CC 64.
+# None of these are bound: unbound notes, pitch bend and CC 1 go to the LAYERS instruments of
+# the lanes the keyboard plays (PLAY ON LAYERS), as before this profile.
+#
+# Knobs K1-K8: absolute CC 70-77 on channel 0 (they stop at their ends, so soft takeover picks
+# them up). A 4-lane mixer strip (owner, D-225): K1-K4 the high-pass filters of LAYERS lanes
+# 1-4, K5-K8 the volumes of lanes 1-4. (D-209 had K1-K4 on lane 1's sound macros; a user can
+# still learn those.) The bindings the earlier version put in are listed as [[superseded]] at
+# the end: a project still holding them (untouched) gets the high-passes instead.
+#
+# Not mapped: the pads' CC mode (CC 16-31) and program-change mode, ARPEGGIATOR, NOTE REPEAT,
+# FULL LEVEL and TAP TEMPO (they work inside the keyboard; no MIDI of their own or none
+# Sublayer uses). No start-up messages, no lights (the keyboard lights its own pads), no
+# Device Inquiry match yet (its reply isn't documented).
+format = 1
+status = "community"
+version = 2
+name = "Akai MPK mini 3"
+ports = ["MPK mini 3"]
+
+# How the MPK is laid out (AL5-14, D-233; drawing only): its pads play the lanes, not deck
+# pads (no `pad_count`), and it has no deck EQ.
+[ui_hints]
+has_3band_eq = false
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "layer.1.hpf"
+message = { type = "cc", number = 70 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "layer.2.hpf"
+message = { type = "cc", number = 71 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "layer.3.hpf"
+message = { type = "cc", number = 72 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "layer.4.hpf"
+message = { type = "cc", number = 73 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "layer.1.volume"
+message = { type = "cc", number = 74 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "layer.2.volume"
+message = { type = "cc", number = 75 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "layer.3.volume"
+message = { type = "cc", number = 76 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "layer.4.volume"
+message = { type = "cc", number = 77 }
+
+[[superseded]]
+port_name = "*"
+channel = 0
+param = "layer.1.macro.cutoff"
+message = { type = "cc", number = 70 }
+
+[[superseded]]
+port_name = "*"
+channel = 0
+param = "layer.1.macro.resonance"
+message = { type = "cc", number = 71 }
+
+[[superseded]]
+port_name = "*"
+channel = 0
+param = "layer.1.macro.detune"
+message = { type = "cc", number = 72 }
+
+[[superseded]]
+port_name = "*"
+channel = 0
+param = "layer.1.macro.decay"
+message = { type = "cc", number = 73 }

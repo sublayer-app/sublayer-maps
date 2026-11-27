@@ -1,0 +1,486 @@
+# Pioneer DJ DDJ-400: built-in map (AL5-12 step 3), picked when a port whose name contains
+# "DDJ-400" connects. MIDI LEARN overrides single controls; MIDI panel -> PROFILE resets.
+#
+# Status: COMMUNITY (written from the manufacturer's documents, not yet tested on a DDJ-400).
+# Clean-room: every number is from AlphaTheta's own documents (research in
+# _docs/controllers/pioneer.md); nothing from any other mapping.
+#   4-ML  "DDJ-400 List of MIDI messages version 1.00" (2018), 3 pages
+#   4-OM  DDJ-400 Operating Instructions DRI1551B (2022)
+# Port name: not stated in the documents; 4-OM p.21 names the device "[DDJ-400]".
+#
+# Channels (0-based, as stored here): deck 1 = 0, deck 2 = 1, browser and mixer = 6, deck 1
+# pads = 7 (SHIFT 8), deck 2 pads = 9 (SHIFT 10) (4-ML p.1 "MIDI channel assignment").
+# Mapped (4-ML figure in brackets):
+#   PLAY/PAUSE note 11 [D1], CUE note 12 [D2], BEAT SYNC note 88 [D5; sent on release], SHIFT
+#   + BEAT SYNC note 96 -> the pitch range (4-OM p.5-6: "Switches the variable range of
+#   [TEMPO] slider"), SHIFT note 63 [D11] (lets go of the deck's held
+#   buttons, D-218), CH CUE note 84 [M7], TRIM 14-bit CC 4/36 [M3], EQ HI 7/39 [M4], MID 11/43
+#   [M5], LOW 15/47 [M6], CH FADER 19/51 [M2], TEMPO 14-bit CC 0/32 [D4; "-" side = min, the
+#   pitch parameter's own direction, so not inverted], jog top touch note 54, jog top rotate
+#   CC 34 (vinyl on) / 35 (vinyl off), jog side CC 33 [D3; 65 up clockwise, 63 down: binary
+#   offset], LOAD left / right notes 70 / 71 [B2-L, B2-R], rotary selector CC 64 [B1; 1-30
+#   clockwise, 127-98 counter-clockwise: two's complement], press note 65, CROSSFADER 14-bit
+#   31/63 [M1], MASTER LEVEL 8/40 [M8], HEADPHONES MIXING 12/44 [M10], HEADPHONES LEVEL 13/45
+#   [M11]; pads in HOT CUE mode notes 0-7 -> hot cues 1-8, SHIFT + pad (SHIFT pad channel,
+#   same notes) -> clear that hot cue [p.2-3].
+# Lights: MIDI-OUT on the same status and note for PLAY, CUE, BEAT SYNC, CH CUE and the pads,
+#   OFF 0x00 / ON 0x7F (4-ML p.1-3).
+# Not mapped (no Sublayer feature to drive): FILTER (ch 6 CC 23/55, 24/56), loop IN / 4BEAT,
+#   OUT, RELOOP/EXIT, CUE LOOP CALL, BEAT FX (ch 4), MASTER CUE, pad modes other than HOT CUE
+#   (BEAT LOOP, BEAT JUMP, SAMPLER, KEYBOARD, PAD FX, KEY SHIFT), the pad mode buttons, other
+#   SHIFT variants of the deck buttons (the documents give numbers, not meanings), fader
+#   start, BEAT SYNC long press, the level meter and the settings messages to the unit
+#   (LOADED, VINYL MODE, FADER START, CROSSFADER REVERSE, CUT LAG, BACK SPIN). No start-up
+#   message (the documents define none). Jog ticks per turn: not in the documents (SET UP
+#   measures it).
+format = 1
+status = "community"
+version = 1
+name = "Pioneer DJ DDJ-400"
+sources = [
+    "https://downloads.support.alphatheta.com/software_info/dj-controllers/DDJ-400/DDJ-400_MIDI_Message_List_E1.pdf",
+    "https://downloads.support.alphatheta.com/manuals/dj-controllers/DDJ-400/DDJ-400_DRI1551B_manual.pdf",
+]
+ports = ["DDJ-400"]
+
+[leds]
+on = 127
+off = 0
+
+# ---- Deck A (channel 0; pads 7, SHIFT pads 8) ----
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.play"
+message = { type = "note", number = 11 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.cue"
+message = { type = "note", number = 12 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.shift"
+message = { type = "note", number = 63 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.sync"
+message = { type = "note", number = 88 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.pfl"
+message = { type = "note", number = 84 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.trim"
+message = { type = "cc14", msb = 4, lsb = 36 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.eq.high"
+message = { type = "cc14", msb = 7, lsb = 39 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.eq.mid"
+message = { type = "cc14", msb = 11, lsb = 43 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.eq.low"
+message = { type = "cc14", msb = 15, lsb = 47 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.fader"
+message = { type = "cc14", msb = 19, lsb = 51 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.pitch"
+message = { type = "cc14", msb = 0, lsb = 32 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.jog.touch"
+message = { type = "note", number = 54 }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.jog"
+message = { type = "relative_cc", number = 34, encoding = "BinaryOffset" }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.jog"
+message = { type = "relative_cc", number = 35, encoding = "BinaryOffset" }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.jog"
+message = { type = "relative_cc", number = 33, encoding = "BinaryOffset" }
+
+[[binding]]
+port_name = "*"
+channel = 0
+param = "deck.a.pitch.range.next"
+message = { type = "note", number = 96 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.a.hotcue.1"
+message = { type = "note", number = 0 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.a.hotcue.2"
+message = { type = "note", number = 1 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.a.hotcue.3"
+message = { type = "note", number = 2 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.a.hotcue.4"
+message = { type = "note", number = 3 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.a.hotcue.5"
+message = { type = "note", number = 4 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.a.hotcue.6"
+message = { type = "note", number = 5 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.a.hotcue.7"
+message = { type = "note", number = 6 }
+
+[[binding]]
+port_name = "*"
+channel = 7
+param = "deck.a.hotcue.8"
+message = { type = "note", number = 7 }
+
+[[binding]]
+port_name = "*"
+channel = 8
+param = "deck.a.hotcue.1.clear"
+message = { type = "note", number = 0 }
+
+[[binding]]
+port_name = "*"
+channel = 8
+param = "deck.a.hotcue.2.clear"
+message = { type = "note", number = 1 }
+
+[[binding]]
+port_name = "*"
+channel = 8
+param = "deck.a.hotcue.3.clear"
+message = { type = "note", number = 2 }
+
+[[binding]]
+port_name = "*"
+channel = 8
+param = "deck.a.hotcue.4.clear"
+message = { type = "note", number = 3 }
+
+[[binding]]
+port_name = "*"
+channel = 8
+param = "deck.a.hotcue.5.clear"
+message = { type = "note", number = 4 }
+
+[[binding]]
+port_name = "*"
+channel = 8
+param = "deck.a.hotcue.6.clear"
+message = { type = "note", number = 5 }
+
+[[binding]]
+port_name = "*"
+channel = 8
+param = "deck.a.hotcue.7.clear"
+message = { type = "note", number = 6 }
+
+[[binding]]
+port_name = "*"
+channel = 8
+param = "deck.a.hotcue.8.clear"
+message = { type = "note", number = 7 }
+
+# ---- Deck B (channel 1; pads 9, SHIFT pads 10) ----
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.play"
+message = { type = "note", number = 11 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.cue"
+message = { type = "note", number = 12 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.shift"
+message = { type = "note", number = 63 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.sync"
+message = { type = "note", number = 88 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.pfl"
+message = { type = "note", number = 84 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.trim"
+message = { type = "cc14", msb = 4, lsb = 36 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.eq.high"
+message = { type = "cc14", msb = 7, lsb = 39 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.eq.mid"
+message = { type = "cc14", msb = 11, lsb = 43 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.eq.low"
+message = { type = "cc14", msb = 15, lsb = 47 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.fader"
+message = { type = "cc14", msb = 19, lsb = 51 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.pitch"
+message = { type = "cc14", msb = 0, lsb = 32 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.jog.touch"
+message = { type = "note", number = 54 }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.jog"
+message = { type = "relative_cc", number = 34, encoding = "BinaryOffset" }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.jog"
+message = { type = "relative_cc", number = 35, encoding = "BinaryOffset" }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.jog"
+message = { type = "relative_cc", number = 33, encoding = "BinaryOffset" }
+
+[[binding]]
+port_name = "*"
+channel = 1
+param = "deck.b.pitch.range.next"
+message = { type = "note", number = 96 }
+
+[[binding]]
+port_name = "*"
+channel = 9
+param = "deck.b.hotcue.1"
+message = { type = "note", number = 0 }
+
+[[binding]]
+port_name = "*"
+channel = 9
+param = "deck.b.hotcue.2"
+message = { type = "note", number = 1 }
+
+[[binding]]
+port_name = "*"
+channel = 9
+param = "deck.b.hotcue.3"
+message = { type = "note", number = 2 }
+
+[[binding]]
+port_name = "*"
+channel = 9
+param = "deck.b.hotcue.4"
+message = { type = "note", number = 3 }
+
+[[binding]]
+port_name = "*"
+channel = 9
+param = "deck.b.hotcue.5"
+message = { type = "note", number = 4 }
+
+[[binding]]
+port_name = "*"
+channel = 9
+param = "deck.b.hotcue.6"
+message = { type = "note", number = 5 }
+
+[[binding]]
+port_name = "*"
+channel = 9
+param = "deck.b.hotcue.7"
+message = { type = "note", number = 6 }
+
+[[binding]]
+port_name = "*"
+channel = 9
+param = "deck.b.hotcue.8"
+message = { type = "note", number = 7 }
+
+[[binding]]
+port_name = "*"
+channel = 10
+param = "deck.b.hotcue.1.clear"
+message = { type = "note", number = 0 }
+
+[[binding]]
+port_name = "*"
+channel = 10
+param = "deck.b.hotcue.2.clear"
+message = { type = "note", number = 1 }
+
+[[binding]]
+port_name = "*"
+channel = 10
+param = "deck.b.hotcue.3.clear"
+message = { type = "note", number = 2 }
+
+[[binding]]
+port_name = "*"
+channel = 10
+param = "deck.b.hotcue.4.clear"
+message = { type = "note", number = 3 }
+
+[[binding]]
+port_name = "*"
+channel = 10
+param = "deck.b.hotcue.5.clear"
+message = { type = "note", number = 4 }
+
+[[binding]]
+port_name = "*"
+channel = 10
+param = "deck.b.hotcue.6.clear"
+message = { type = "note", number = 5 }
+
+[[binding]]
+port_name = "*"
+channel = 10
+param = "deck.b.hotcue.7.clear"
+message = { type = "note", number = 6 }
+
+[[binding]]
+port_name = "*"
+channel = 10
+param = "deck.b.hotcue.8.clear"
+message = { type = "note", number = 7 }
+
+# ---- Mixer and browser (channel 6) ----
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "deck.a.load"
+message = { type = "note", number = 70 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "deck.b.load"
+message = { type = "note", number = 71 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "browse.turn"
+message = { type = "relative_cc", number = 64, encoding = "TwosComplement" }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "browse.push"
+message = { type = "note", number = 65 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "mixer.xfader"
+message = { type = "cc14", msb = 31, lsb = 63 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "mixer.master"
+message = { type = "cc14", msb = 8, lsb = 40 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "cue.mix"
+message = { type = "cc14", msb = 12, lsb = 44 }
+
+[[binding]]
+port_name = "*"
+channel = 6
+param = "cue.vol"
+message = { type = "cc14", msb = 13, lsb = 45 }

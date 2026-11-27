@@ -1,0 +1,89 @@
+# The map library's checks and publishing (AL5-24 step 2, D-226, D-241).
+# check:   every pull request (forks included: no secrets needed), with the
+#          app's own rules, by the prebuilt sublayer-map-check downloaded with its SHA-256 pinned.
+# publish: on merge to main, every map checked and the library rebuilt, uploaded as an artifact;
+#          the upload to releases.sublayer.app waits for its credentials (see README).
+# Never pull_request_target: a fork's PR must not run with this repository's secrets.
+name: maps
+
+on:
+  # Every pull request, with no paths filter: `check` is a required check, and a required check
+  # whose workflow a paths filter skips waits forever. With no map changed it checks the index.
+  pull_request:
+  push:
+    branches: [main]
+    paths: ["maps/*.toml"]
+
+permissions:
+  contents: read
+
+env:
+  # The checker, built by the app repository's scripts/build-map-check.sh (a universal macOS
+  # binary) and published to releases.sublayer.app/tools/. Moved forward, file and hash
+  # together, when the app's map rules change.
+  MAP_CHECK_FILE: sublayer-map-check-2acc0f4589d0-macos-universal.tar.gz
+  MAP_CHECK_SHA256: d69cbd6868f3f6328216c30abc3bcfc773c4db1eeb802309a4cbc23d103c2336
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request'
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Get sublayer-map-check
+        run: |
+          curl -fsSL --proto '=https' "https://releases.sublayer.app/tools/$MAP_CHECK_FILE" -o "$RUNNER_TEMP/$MAP_CHECK_FILE"
+          echo "$MAP_CHECK_SHA256  $RUNNER_TEMP/$MAP_CHECK_FILE" | shasum -a 256 -c -
+          tar -xzf "$RUNNER_TEMP/$MAP_CHECK_FILE" -C "$RUNNER_TEMP"
+      - name: Check the added and changed maps
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          check="$RUNNER_TEMP/sublayer-map-check"
+          old="$RUNNER_TEMP/old"
+          mkdir -p "$old"
+          args=()
+          # Renames count as a delete and an add (the id is the file name).
+          while IFS= read -r f; do
+            [ -n "$f" ] && args+=("$f")
+          done < <(git diff --name-only --no-renames --diff-filter=A "$BASE" HEAD -- ':(glob)maps/*.toml')
+          # A changed map is checked against its earlier version: its version must go up (D-233).
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            git show "$BASE:$f" > "$old/$(basename "$f")"
+            args+=(--against "$old/$(basename "$f")" "$f")
+          done < <(git diff --name-only --no-renames --diff-filter=M "$BASE" HEAD -- ':(glob)maps/*.toml')
+          # A deleted map needs a maintainer's eye: apps that cached it keep it, and its id can't
+          # come back with other content.
+          while IFS= read -r f; do
+            [ -n "$f" ] && echo "::warning file=$f::$f is deleted: a maintainer must agree (cached copies stay in apps)"
+          done < <(git diff --name-only --no-renames --diff-filter=D "$BASE" HEAD -- ':(glob)maps/*.toml')
+          "$check" check --deny-warnings --maps-dir maps ${args[@]+"${args[@]}"}
+
+  publish:
+    if: github.event_name == 'push'
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Get sublayer-map-check
+        run: |
+          curl -fsSL --proto '=https' "https://releases.sublayer.app/tools/$MAP_CHECK_FILE" -o "$RUNNER_TEMP/$MAP_CHECK_FILE"
+          echo "$MAP_CHECK_SHA256  $RUNNER_TEMP/$MAP_CHECK_FILE" | shasum -a 256 -c -
+          tar -xzf "$RUNNER_TEMP/$MAP_CHECK_FILE" -C "$RUNNER_TEMP"
+      - name: Check every map and build the library
+        run: |
+          "$RUNNER_TEMP/sublayer-map-check" check --maps-dir maps
+          "$RUNNER_TEMP/sublayer-map-check" index maps out
+          (cd out/controllers && shasum -a 256 *.toml)
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: controllers
+          path: out/controllers
+      # The upload to releases.sublayer.app (through Miranium, as releases are) is enabled once
+      # its credentials exist as repository secrets; until then a maintainer uploads the
+      # artifact and checks each served SHA-256 against index.json.
